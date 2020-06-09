@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: run_exp",
+            "type": "python",
+            "request": "launch",
+            "program": "run_exp.py",
+            "console": "integratedTerminal",
+            "args": [
+                "cfg/TIMIT_baselines/TIMIT_myDNN_mfcc_basic.cfg"
+            ]
+        }
+    ]
+}
