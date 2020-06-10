@@ -13,12 +13,11 @@ import numpy as np
 from distutils.util import strtobool
 import math
 import json
-from myDNN import myDNN
 
 # uncomment below if you want to use SRU
 # and you need to install SRU: pip install sru[cuda].
 # or you can install it from source code: https://github.com/taolei87/sru.
-# import sru
+import sru
 
 
 class LayerNorm(nn.Module):
