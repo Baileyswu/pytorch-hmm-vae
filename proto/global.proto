@@ -8,6 +8,7 @@ run_nn_script=str
 out_folder=str
 seed=int(-inf,inf)
 use_cuda=bool
+gpu_id=str
 multi_gpu=bool
 save_gpumem=bool
 N_epochs_tr=int(1,inf)

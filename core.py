@@ -458,7 +458,10 @@ def run_nn(
     # Reading config parameters
     output_folder = config["exp"]["out_folder"]
     use_cuda = strtobool(config["exp"]["use_cuda"])
+    gpu_id = config["exp"]["gpu_id"]
     multi_gpu = strtobool(config["exp"]["multi_gpu"])
+    save_gpumem = strtobool(config["exp"]["save_gpumem"])
+    is_production = strtobool(config["exp"]["production"])
 
     to_do = config["exp"]["to_do"]
     info_file = config["exp"]["out_info"]
@@ -469,10 +472,6 @@ def run_nn(
     forward_normalize_post = list(map(strtobool, config["forward"]["normalize_posteriors"].split(",")))
     forward_count_files = config["forward"]["normalize_with_counts_from"].split(",")
     require_decodings = list(map(strtobool, config["forward"]["require_decoding"].split(",")))
-
-    use_cuda = strtobool(config["exp"]["use_cuda"])
-    save_gpumem = strtobool(config["exp"]["save_gpumem"])
-    is_production = strtobool(config["exp"]["production"])
 
     if to_do == "train":
         batch_size = int(config["batches"]["batch_size_train"])
@@ -502,7 +501,7 @@ def run_nn(
 
         # converting numpy tensors into pytorch tensors and put them on GPUs if specified
         if not (save_gpumem) and use_cuda:
-            torch.cuda.set_device("cuda:3")
+            torch.cuda.set_device(gpu_id)
             torch.cuda.current_device()
             data_set = torch.from_numpy(data_set).float().cuda()
         else:
