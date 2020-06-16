@@ -1,6 +1,7 @@
 # Ignore temporary python files / dirs
 *.pyc
 __pycache__
+*checkpoints
 
 # Ignore user-generated exp directories
 exp

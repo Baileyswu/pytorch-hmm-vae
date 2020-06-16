@@ -482,6 +482,11 @@ def run_nn(
     if to_do == "forward":
         batch_size = 1
 
+    # set gpu id
+    if use_cuda:
+        torch.cuda.set_device(gpu_id)
+        torch.cuda.current_device()
+
     # ***** Reading the Data********
     if processed_first:
 
@@ -501,8 +506,6 @@ def run_nn(
 
         # converting numpy tensors into pytorch tensors and put them on GPUs if specified
         if not (save_gpumem) and use_cuda:
-            torch.cuda.set_device(gpu_id)
-            torch.cuda.current_device()
             data_set = torch.from_numpy(data_set).float().cuda()
         else:
             data_set = torch.from_numpy(data_set).float()
