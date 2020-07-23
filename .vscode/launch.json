@@ -2,14 +2,51 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: run_exp",
+            "name": "TIMIT_MLP_mfcc_basic",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/run_exp.py",
             "console": "integratedTerminal",
             "args": [
-                "cfg/TIMIT_baselines/TIMIT_MLP_fbank_autoencoder.cfg"
+                "${workspaceFolder}/cfg/TIMIT_baselines/TIMIT_MLP_mfcc_basic.cfg"
             ]
-        }
+        },
+        {
+            "name": "TIMIT_MLP_fbank_autoencoder",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_exp.py",
+            "console": "integratedTerminal",
+            "args": [
+                "${workspaceFolder}/cfg/TIMIT_baselines/TIMIT_MLP_fbank_autoencoder.cfg"
+            ]
+        },
+        {
+            "name": "TIMIT_MLP_mfcc_autoencoder",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_exp.py",
+            "console": "integratedTerminal",
+            "args": [
+                "${workspaceFolder}/cfg/TIMIT_baselines/TIMIT_MLP_mfcc_autoencoder.cfg"
+            ]
+        },
+        {
+            "name": "TIMIT_MLP_mfcc_vae",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_exp.py",
+            "console": "integratedTerminal",
+            "args": [
+                "${workspaceFolder}/cfg/TIMIT_baselines/TIMIT_MLP_mfcc_vae.cfg"
+            ]
+        },
+        {
+            "name": "vae",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/vae.py",
+            "console": "integratedTerminal"
+        },
     ]
 }

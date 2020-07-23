@@ -2,101 +2,48 @@ from distutils.util import strtobool
 import torch
 import torch.nn as nn
 import numpy as np
-from neural_networks import act_fun, LayerNorm
 
-class myDNN(nn.Module):
-    def __init__(self, options, inp_dim):
-        super(myDNN, self).__init__()
-
-        self.input_dim = inp_dim
-        self.dnn_lay = list(map(int, options["dnn_lay"].split(",")))
-        self.dnn_drop = list(map(float, options["dnn_drop"].split(",")))
-        self.dnn_use_batchnorm = list(
-            map(strtobool, options["dnn_use_batchnorm"].split(",")))
-        self.dnn_use_laynorm = list(
-            map(strtobool, options["dnn_use_laynorm"].split(",")))
-        self.dnn_use_laynorm_inp = strtobool(options["dnn_use_laynorm_inp"])
-        self.dnn_use_batchnorm_inp = strtobool(
-            options["dnn_use_batchnorm_inp"])
-        self.dnn_act = options["dnn_act"].split(",")
-
-        self.wx = nn.ModuleList([])
-        self.bn = nn.ModuleList([])
-        self.ln = nn.ModuleList([])
-        self.act = nn.ModuleList([])
-        self.drop = nn.ModuleList([])
-
-        # input layer normalization
-        if self.dnn_use_laynorm_inp:
-            self.ln0 = LayerNorm(self.input_dim)
-
-        # input batch normalization
-        if self.dnn_use_batchnorm_inp:
-            self.bn0 = nn.BatchNorm1d(self.input_dim, momentum=0.05)
-
-        self.N_dnn_lay = len(self.dnn_lay)
-
-        current_input = self.input_dim
-
-        # Initialization of hidden layers
-
-        for i in range(self.N_dnn_lay):
-
-            # dropout
-            self.drop.append(nn.Dropout(p=self.dnn_drop[i]))
-
-            # activation
-            self.act.append(act_fun(self.dnn_act[i]))
-
-            add_bias = True
-
-            # layer norm initialization
-            self.ln.append(LayerNorm(self.dnn_lay[i]))
-            self.bn.append(nn.BatchNorm1d(self.dnn_lay[i], momentum=0.05))
-
-            if self.dnn_use_laynorm[i] or self.dnn_use_batchnorm[i]:
-                add_bias = False
-
-            # Linear operations
-            self.wx.append(
-                nn.Linear(current_input, self.dnn_lay[i], bias=add_bias))
-
-            # weight initialization
-            self.wx[i].weight = torch.nn.Parameter(
-                torch.Tensor(self.dnn_lay[i], current_input).uniform_(
-                    -np.sqrt(0.01 / (current_input + self.dnn_lay[i])),
-                    np.sqrt(0.01 / (current_input + self.dnn_lay[i])),
-                )
-            )
-            self.wx[i].bias = torch.nn.Parameter(torch.zeros(self.dnn_lay[i]))
-
-            current_input = self.dnn_lay[i]
-
-        self.out_dim = current_input
-
+class ResidualFeedFowardBlock(torch.nn.Module):
+    '''Block of two feed-forward layer with a reisdual connection:
+      
+            f(W1^T x + b1)         f(W2^T h1 + b2 )         h2 + x 
+        x ------------------> h1 --------------------> h2 ----------> y
+        |                                              ^
+        |               Residual connection            | 
+        +----------------------------------------------+
+        
+    '''
+    
+    def __init__(self, dim_in, width, activation_fn=torch.nn.Tanh):
+        super().__init__()
+        self.layer1 = torch.nn.Linear(dim_in, width)
+        self.layer2 = torch.nn.Linear(width, dim_in)
+        self.activation_fn = activation_fn()
+    
     def forward(self, x):
+        h1 = self.activation_fn(self.layer1(x))
+        h2 = self.activation_fn(self.layer2(h1))
+        return h2 + x
+    
 
-        # Applying Layer/Batch Norm
-        if bool(self.dnn_use_laynorm_inp):
-            x = self.ln0((x))
+class ResidualFeedForwardNet(torch.nn.Module):
+    
+    def __init__(self, dim_in, nblocks=1, block_width=10):
+        super().__init__()
+        self._dim_in = dim_in
+        self.blocks = torch.nn.Sequential(*[
+            ResidualFeedFowardBlock(dim_in, block_width)
+            for i in range(nblocks)
+        ])
+    
+    @property
+    def dim_in(self):
+        return self._dim_in
 
-        if bool(self.dnn_use_batchnorm_inp):
-
-            x = self.bn0((x))
-
-        for i in range(self.N_dnn_lay):
-
-            if self.dnn_use_laynorm[i] and not (self.dnn_use_batchnorm[i]):
-                x = self.drop[i](self.act[i](self.ln[i](self.wx[i](x))))
-
-            if self.dnn_use_batchnorm[i] and not (self.dnn_use_laynorm[i]):
-                x = self.drop[i](self.act[i](self.bn[i](self.wx[i](x))))
-
-            if self.dnn_use_batchnorm[i] == True and self.dnn_use_laynorm[i] == True:
-                x = self.drop[i](self.act[i](
-                    self.bn[i](self.ln[i](self.wx[i](x)))))
-
-            if self.dnn_use_batchnorm[i] == False and self.dnn_use_laynorm[i] == False:
-                x = self.drop[i](self.act[i](self.wx[i](x)))
-
-        return x
+    @property
+    def dim_out(self):
+        # input and output dimension are the same in our residual network.
+        return self._dim_in
+    
+    def forward(self, X):
+        return self.blocks(X)

@@ -2076,27 +2076,29 @@ def model_init(inp_out_dict, model, config, arch_dict, use_cuda, multi_gpu, to_d
             # updating output dim
             inp_out_dict[out_name] = [out_dim]
 
-        if operation == "concatenate":
+        elif operation == "concatenate":
 
             inp_dim1 = inp_out_dict[inp1][-1]
             inp_dim2 = inp_out_dict[inp2][-1]
 
             inp_out_dict[out_name] = [inp_dim1 + inp_dim2]
 
-        if operation == "cost_nll":
+        elif operation == "cost_nll":
             costs[out_name] = nn.NLLLoss()
             inp_out_dict[out_name] = [1]
 
-        if operation == "cost_err":
+        elif operation == "cost_err":
             inp_out_dict[out_name] = [1]
 
-        if (
+        elif (
             operation == "mult"
             or operation == "sum"
             or operation == "mult_constant"
             or operation == "sum_constant"
             or operation == "avg"
             or operation == "mse"
+            or operation == "kl"
+            or operation == "sampling"
         ):
             inp_out_dict[out_name] = inp_out_dict[inp1]
 
@@ -2290,6 +2292,18 @@ def forward_model_refac01(
             outs_dict[out_name] = torch.mean((outs_dict[inp1] - outs_dict[inp2]) ** 2)
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
+        elif operation == "kl":
+            outs_dict[out_name] = torch.mean(-0.5 * torch.sum(1 + outs_dict[inp2] - outs_dict[inp1] ** 2 - outs_dict[inp2].exp(), dim = 1), dim = 0)
+            if to_do == "forward" and out_name == forward_outs[-1]:
+                break
+        elif operation == "sampling":
+            mu = outs_dict[inp1]
+            logvar = outs_dict[inp2]
+            std = torch.exp(0.5 * logvar)
+            eps = torch.randn_like(std)
+            outs_dict[out_name] = eps * std + mu
+            if to_do == "forward" and out_name == forward_outs[-1]:
+                break
     return outs_dict
 
 
@@ -2341,7 +2355,7 @@ def forward_model(
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
 
-        if operation == "cost_nll":
+        elif operation == "cost_nll":
 
             # Put labels in the right format
             if len(inp.shape) == 3:
@@ -2360,7 +2374,7 @@ def forward_model(
             if to_do != "forward":
                 outs_dict[out_name] = costs[out_name](out, lab_dnn)
 
-        if operation == "cost_err":
+        elif operation == "cost_err":
 
             if len(inp.shape) == 3:
                 lab_dnn = inp[:, :, lab_dict[inp2][3]]
@@ -2381,39 +2395,53 @@ def forward_model(
                 outs_dict[out_name] = err
                 # print(err)
 
-        if operation == "concatenate":
+        elif operation == "concatenate":
             dim_conc = len(outs_dict[inp1].shape) - 1
             outs_dict[out_name] = torch.cat((outs_dict[inp1], outs_dict[inp2]), dim_conc)  # check concat axis
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
 
-        if operation == "mult":
+        elif operation == "mult":
             outs_dict[out_name] = outs_dict[inp1] * outs_dict[inp2]
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
 
-        if operation == "sum":
+        elif operation == "sum":
             outs_dict[out_name] = outs_dict[inp1] + outs_dict[inp2]
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
 
-        if operation == "mult_constant":
+        elif operation == "mult_constant":
             outs_dict[out_name] = outs_dict[inp1] * float(inp2)
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
 
-        if operation == "sum_constant":
+        elif operation == "sum_constant":
             outs_dict[out_name] = outs_dict[inp1] + float(inp2)
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
 
-        if operation == "avg":
+        elif operation == "avg":
             outs_dict[out_name] = (outs_dict[inp1] + outs_dict[inp2]) / 2
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
 
-        if operation == "mse":
+        elif operation == "mse":
             outs_dict[out_name] = torch.mean((outs_dict[inp1] - outs_dict[inp2]) ** 2)
+            if to_do == "forward" and out_name == forward_outs[-1]:
+                break
+        
+        elif operation == "kl":
+            outs_dict[out_name] = torch.mean(-0.5 * torch.sum(1 + outs_dict[inp2] - outs_dict[inp1] ** 2 - outs_dict[inp2].exp(), dim = 1), dim = 0)
+            if to_do == "forward" and out_name == forward_outs[-1]:
+                break
+
+        elif operation == "sampling":
+            mu = outs_dict[inp1]
+            logvar = outs_dict[inp2]
+            std = torch.exp(0.5 * logvar)
+            eps = torch.randn_like(std)
+            outs_dict[out_name] = eps * std + mu
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
 

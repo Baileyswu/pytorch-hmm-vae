@@ -2,3 +2,7 @@ matplotlib>=2.1.0
 scipy>=1.0.0
 numpy>=1.14.2
 blockdiag>=1.0
+torch
+torchvision
+tqdm
+six
