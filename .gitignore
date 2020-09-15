@@ -7,4 +7,7 @@ __pycache__
 exp
 .DS_Store
 
+# Igore linked kaldi
+kaldi/
+
 *.png

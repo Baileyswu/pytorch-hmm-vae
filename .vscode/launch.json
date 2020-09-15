@@ -2,6 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "TIMIT_MLP_mfcc_basic",
             "type": "python",
             "request": "launch",
@@ -48,5 +55,25 @@
             "program": "${workspaceFolder}/vae.py",
             "console": "integratedTerminal"
         },
+        {
+            "name": "TIMIT_liGRU_fbank",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_exp.py",
+            "console": "integratedTerminal",
+            "args": [
+                "${workspaceFolder}/cfg/TIMIT_baselines/TIMIT_liGRU_fbank.cfg"
+            ]
+        },
+        {
+            "name": "TIMIT_liGRU_fbank_cross_attention",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_exp.py",
+            "console": "integratedTerminal",
+            "args": [
+                "${workspaceFolder}/cfg/TIMIT_baselines/TIMIT_liGRU_fbank_cross_attention.cfg"
+            ]
+        }
     ]
 }
