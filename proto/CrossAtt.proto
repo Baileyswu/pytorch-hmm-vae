@@ -1,0 +1,6 @@
+[proto]
+crossatt_n_head=int(0,inf)
+crossatt_d_k=int(0,inf)
+crossatt_d_v=int(0,inf)
+crossatt_dropout=float
+

@@ -1,0 +1,6 @@
+[proto]
+selfatt_n_head=int(0,inf)
+selfatt_d_k=int(0,inf)
+selfatt_d_v=int(0,inf)
+selfatt_dropout=float
+

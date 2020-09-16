@@ -2083,6 +2083,12 @@ def model_init(inp_out_dict, model, config, arch_dict, use_cuda, multi_gpu, to_d
 
             inp_out_dict[out_name] = [inp_dim1 + inp_dim2]
 
+        elif operation == "multi_combine":
+            inp_dim1 = inp_out_dict[inp1][-1]
+            inp_dim2 = inp_out_dict[inp2][-1]
+
+            inp_out_dict[out_name] = [[inp_dim1, inp_dim2]]
+
         elif operation == "cost_nll":
             costs[out_name] = nn.NLLLoss()
             inp_out_dict[out_name] = [1]
@@ -2344,13 +2350,18 @@ def forward_model(
                 outs_dict[out_name] = nns[inp1](inp_dnn)
 
             else:
-                if not (bool(arch_dict[inp1][2])) and len(outs_dict[inp2].shape) == 3:
-                    outs_dict[inp2] = outs_dict[inp2].view(max_len * batch_size, -1)
+                if isinstance(outs_dict[inp2], dict):
 
-                if bool(arch_dict[inp1][2]) and len(outs_dict[inp2].shape) == 2:
-                    outs_dict[inp2] = outs_dict[inp2].view(max_len, batch_size, -1)
+                    if not (bool(arch_dict[inp1][2])) and len(outs_dict[inp2].shape) == 3:
+                        outs_dict[inp2] = outs_dict[inp2].view(max_len * batch_size, -1)
+
+                    if bool(arch_dict[inp1][2]) and len(outs_dict[inp2].shape) == 2:
+                        outs_dict[inp2] = outs_dict[inp2].view(max_len, batch_size, -1)
 
                 outs_dict[out_name] = nns[inp1](outs_dict[inp2])
+                
+                if isinstance(outs_dict[out_name], tuple):
+                    outs_dict[out_name] = outs_dict[out_name][0]
 
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
@@ -2401,6 +2412,12 @@ def forward_model(
             if to_do == "forward" and out_name == forward_outs[-1]:
                 break
 
+        elif operation == "multi_combine":
+            outs_dict[out_name] = [outs_dict[inp1], outs_dict[inp2]] 
+            
+            if to_do == "forward" and out_name == forward_outs[-1]:
+                break
+        
         elif operation == "mult":
             outs_dict[out_name] = outs_dict[inp1] * outs_dict[inp2]
             if to_do == "forward" and out_name == forward_outs[-1]:

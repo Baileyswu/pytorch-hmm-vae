@@ -1,6 +1,7 @@
 [proto]
 compute(architecture,input)
 concatenate(input,input)
+multi_combine(input,input)
 cost_nll(input,label)
 cost_err(input,label)
 mult(input,input)

@@ -73,8 +73,14 @@ class ScaledDotProductAttention(nn.Module):
 class MultiHeadAttention(nn.Module):
     ''' Multi-Head Attention module '''
 
-    def __init__(self, n_head, d_model, d_k, d_v, dropout=0.1):
+    def __init__(self, options, inp_dim, dropout=0.1):
         super().__init__()
+
+        n_head=int(options["selfatt_n_head"])
+        d_k=int(options["selfatt_d_k"])
+        d_v=int(options["selfatt_d_v"])
+        dropout=float(options["selfatt_dropout"])
+        d_model=inp_dim
 
         self.n_head = n_head
         self.d_k = d_k
@@ -89,10 +95,12 @@ class MultiHeadAttention(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
         self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.out_dim = d_model
 
 
-    def forward(self, q, k, v, mask=None):
-
+    def forward(self, x, mask=None):
+        q = x
+        k, v = x, x
         d_k, d_v, n_head = self.d_k, self.d_v, self.n_head
         sz_b, len_q, len_k, len_v = q.size(0), q.size(1), k.size(1), v.size(1)
 
@@ -125,9 +133,16 @@ class MultiHeadAttention(nn.Module):
 class MultiHeadCrossAttention(nn.Module):
     ''' Multi-Head Cross Attention module '''
 
-    def __init__(self, n_head, query_model, kv_model, d_k, d_v, dropout=0.1):
+    def __init__(self, options, inp_dim, dropout=0.1):
         super().__init__()
 
+        n_head=int(options["crossatt_n_head"])
+        d_k=int(options["crossatt_d_k"])
+        d_v=int(options["crossatt_d_v"])
+        dropout=float(options["crossatt_dropout"])
+        query_model = inp_dim[0]
+        kv_model = inp_dim[1]
+        
         self.n_head = n_head
         self.d_k = d_k
         self.d_v = d_v
@@ -141,9 +156,12 @@ class MultiHeadCrossAttention(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
         self.layer_norm = nn.LayerNorm(query_model, eps=1e-6)
+        self.out_dim = query_model
 
 
-    def forward(self, q, k, v, mask=None):
+    def forward(self, x, mask=None):
+        q = x[0]
+        k, v = x[1], x[1]
 
         d_k, d_v, n_head = self.d_k, self.d_v, self.n_head
         sz_b, len_q, len_k, len_v = q.size(0), q.size(1), k.size(1), v.size(1)
