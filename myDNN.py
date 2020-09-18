@@ -99,6 +99,7 @@ class MultiHeadAttention(nn.Module):
 
 
     def forward(self, x, mask=None):
+        x = torch.transpose(x, 0, 1)
         q = x
         k, v = x, x
         d_k, d_v, n_head = self.d_k, self.d_v, self.n_head
@@ -127,7 +128,7 @@ class MultiHeadAttention(nn.Module):
         q += residual
 
         q = self.layer_norm(q)
-
+        q = torch.transpose(q, 0, 1)
         return q, attn
 
 class MultiHeadCrossAttention(nn.Module):
@@ -160,6 +161,8 @@ class MultiHeadCrossAttention(nn.Module):
 
 
     def forward(self, x, mask=None):
+        x[0] = torch.transpose(x[0], 0, 1)
+        x[1] = torch.transpose(x[1], 0, 1)
         q = x[0]
         k, v = x[1], x[1]
 
@@ -189,7 +192,7 @@ class MultiHeadCrossAttention(nn.Module):
         q += residual
 
         q = self.layer_norm(q)
-
+        q = torch.transpose(q, 0, 1)
         return q, attn
 class PositionwiseFeedForward(nn.Module):
     ''' A two-feed-forward-layer module '''
