@@ -9,5 +9,6 @@ exp
 
 # Igore linked kaldi
 kaldi/
+dataset/
 
 *.png
